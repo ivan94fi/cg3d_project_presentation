@@ -1,0 +1,56 @@
+\documentclass{beamer}
+\usepackage[english]{babel}
+\usetheme{CambridgeUS}
+
+\usepackage{caption}
+\captionsetup{tableposition=top,figureposition=bottom,font=small}
+\usepackage{graphicx}
+\usepackage{subfig}
+\usepackage{grffile}
+\usepackage{booktabs}
+\usepackage[absolute,overlay]{textpos}
+\setbeamertemplate{navigation symbols}{}
+\title[]{Screen Space Ambient Occlusion \\\small A WebGL/three.js implementation}
+
+\newsavebox{\authbox}
+\sbox{\authbox}{
+    \centering
+    \begin{minipage}{0.45\linewidth}
+        \centering\normalsize
+        Ivan Prosperi
+    \end{minipage}
+}
+
+
+\author[Ivan Prosperi]{
+    \usebox{\authbox}}
+\institute[]{Universit\`a degli Studi di Firenze}
+\date{}
+\logo{\textcolor{black}{\includegraphics[width=0.10\textwidth]{images/logo_unifi/stemma_grigio.pdf}}}
+
+
+\AtBeginSection{%
+    \begin{frame}
+    \tableofcontents[currentsection, subsectionstyle=show/show/hide]
+\end{frame}
+}
+\begin{document}
+
+\begin{frame}
+    \titlepage
+    \centering
+    \vspace*{-1.3cm}
+    Computer Graphics \& 3D Project Report
+\end{frame}
+
+\begin{frame}
+    \frametitle{Table of contents}
+    \tableofcontents
+\end{frame}
+
+% ##################### START #####################
+
+
+% ##################### END #####################
+
+\end{document}
