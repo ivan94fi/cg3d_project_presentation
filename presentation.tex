@@ -34,6 +34,7 @@
     \tableofcontents[currentsection, subsectionstyle=show/show/hide]
 \end{frame}
 }
+
 \begin{document}
 
 \begin{frame}
@@ -49,7 +50,55 @@
 \end{frame}
 
 % ##################### START #####################
+\section{Introduction}
 
+\subsection{Ambient Occlusion}
+
+\begin{frame}
+\frametitle{Ambient Occlusion}
+% cosa è, immagini con/senza
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Global Illumination}
+% cosa è, immagini indirect light + AO vera + citazione paper AO
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Multipass Rendering}
+% Dire che GI non si può ottenere e si usa multipass per approssimare
+% Far vedere esempio di multipass rendering
+% Scrivere tipo "used for shadow mapping, normal mapping, etc"
+
+\end{frame}
+
+\section{Screen Space Ambient Occlusion}
+
+\subsection{Principles}
+
+\begin{frame}
+\frametitle{Screen Space Ambient Occlusion}
+% crytek-crysis 2007
+
+\end{frame}
+
+% Magari mettere un altro frame qui con qualcosaltro
+
+\subsection{Implementation Details}
+% scrivere che si usa deferred rendering, scrivere tutti i gbuffer che si usano,..
+
+% Qui metto tutte subsub con le tecniche che ho usato: tipo range check, min/max distance,.. No view space reconstruction. Quella ha subsection dedicata
+\subsubsection{Range Check}
+\subsubsection{Distance Constraints}
+
+% FIXME: forse usare dei frame più che delle subsubsection per la roba sopra
+
+\subsection{View Space Reconstruction}
+
+\section{Tools and Software}
+% threejs webgl buildpack node/npm heroku eslint
 
 % ##################### END #####################
 
