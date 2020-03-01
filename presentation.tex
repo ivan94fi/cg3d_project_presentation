@@ -67,6 +67,7 @@ Ambient occlusion is a shading technique computes the degree of exposure to ambi
 \end{frame}
 
 \begin{frame}
+\frametitle{Ambient Occlusion Effects}
 \begin{figure}
     \centering
     \includegraphics[width=0.8\linewidth]{images/B-25_raw.png}
@@ -75,10 +76,11 @@ Ambient occlusion is a shading technique computes the degree of exposure to ambi
 \end{figure}
 
 \vspace*{-8px}
-\footnotetext[1]{Landis, H. Production-Ready Global Illumination (2004).}
+\footnotetext[1]{\tiny Landis, H. Production-Ready Global Illumination (2004).}
 \end{frame}
 
 \begin{frame}
+\frametitle{Ambient Occlusion Effects}
 \begin{figure}
     \centering
     \includegraphics[width=0.8\linewidth]{images/B-25_ao.png}
@@ -93,7 +95,7 @@ Ambient occlusion is a shading technique computes the degree of exposure to ambi
 % cosa è, immagini indirect light + AO vera + citazione paper AO
 % Dire che ao vera è fatta con indirect lighting di GI ma troppo
 % costoso in caso di real time
-\textbf{Global Illumination}:
+\textbf{Global Illumination (GI)}:
 \begin{itemize}
     \item \emph{considers} physically correct light phenomena
     \item \emph{is} a \underline{global method}: illumination at each point is a function of other geometry in the scene
@@ -102,7 +104,7 @@ Ambient occlusion is a shading technique computes the degree of exposure to ambi
     \item \emph{comprises} reflection, refraction, shadows, diffuse inter-reflections, caustics, etc
 \end{itemize}
 
-Ambient occlusion approximates some aspects of Global Illumination (GI).
+Ambient occlusion approximates some aspects of Global Illumination.
 
 %\end{frame}
 \framebreak
@@ -110,7 +112,7 @@ Ambient occlusion approximates some aspects of Global Illumination (GI).
 %\frametitle{Global Illumination II}
 \begin{figure}
     \centering
-    \includegraphics[width=1.0\linewidth]{images/gi_room.jpg}
+    \includegraphics[width=0.9\linewidth]{images/gi_room.jpg}
 \end{figure}
 %\end{frame}
 \framebreak
@@ -123,7 +125,7 @@ Global illumination limits:
     \item no algorithm exists to implement GI as a whole
 \end{itemize}
 
-Furthermore, current real-time graphics hardware is mostly based on rasterization $ \Rightarrow $ ideal for direct illumination.
+Furthermore, current real-time graphics hardware is mostly based on rasterization $ \Rightarrow $ ideal for direct illumination computation.
 
 Therefore, \textbf{GI is not reproducible in real time rendering} with the current technologies and hardware.
 \end{frame}
@@ -157,9 +159,53 @@ Multipass rendering (and deferred shading) are employed as low-cost approximatio
 \begin{frame}
 \frametitle{Screen Space Ambient Occlusion}
 % crytek-crysis 2007
-% nasce come tecnica per approssimare ao vera in rendering engine real time con rasterization
+Screen Space Ambient Occlusion (SSAO):
+\begin{itemize}
+    \item first approach to real time AO
+    \item developed at \emph{Crytek GmbH} and included in \emph{CryEngine 2}
+    \item used in \emph{Crysis} (2007)
+\end{itemize}
 
+\begin{columns}
+    \begin{column}{0.4\linewidth}
+        \begin{figure}
+        \centering
+        \subfloat{\includegraphics[width=0.5\linewidth]{images/crytek_logo.pdf}} \\
+        \subfloat{\includegraphics[width=0.8\linewidth]{images/cryengine_logo.pdf}}
+        \end{figure}
+    \end{column}
+
+    \begin{column}{0.4\linewidth}
+        \begin{figure}
+        \centering
+        \includegraphics[width=\linewidth]{images/crysis_cover.png}
+        \end{figure}
+    \end{column}
+\end{columns}
+
+\end{frame}
+
+\begin{frame}[allowframebreaks]
+\frametitle{SSAO in Crysis}
 % mettere immagine crysis coreano + tank + muro dietro
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\linewidth]{images/ssao_crysis_gameplay.png}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\linewidth]{images/ssao_tank.jpg}
+\end{figure}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Screen Space}
+SSAO is a \emph{screen space} technique:
+\begin{itemize}
+    \item bla
+\end{itemize}
 \end{frame}
 
 \begin{frame}
@@ -178,6 +224,19 @@ Multipass rendering (and deferred shading) are employed as low-cost approximatio
 % FIXME: forse usare dei frame più che delle subsubsection per la roba sopra
 
 \subsection{View Space Reconstruction}
+
+\section{Results}
+
+\begin{frame}
+\frametitle{App: SSAO layer}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.95\linewidth]{images/app_ssao}
+\end{figure}
+
+\end{frame}
+
+
 
 \section{Tools and Software}
 % threejs webgl buildpack node/npm heroku eslint
