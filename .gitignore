@@ -1,5 +1,7 @@
 .git
 /*.pdf
+_minted-presentation/
+
 
 *.nav
 *.snm
@@ -26,6 +28,7 @@
 *.mtc1
 *.out
 *.synctex.gz
+*.vrb
 
 *~
 *.pyc
