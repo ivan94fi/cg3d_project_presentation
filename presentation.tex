@@ -28,7 +28,7 @@
 
 
 \author[Ivan Prosperi]{
-    \usebox{\authbox}}
+    \texorpdfstring{\usebox{\authbox}}{Ivan Prosperi}}
 \institute[]{Universit\`a degli Studi di Firenze}
 \date{}
 \logo{\textcolor{black}{\includegraphics[width=0.10\textwidth]{images/logo_unifi/stemma_grigio.pdf}}}
@@ -398,6 +398,9 @@ Samples in tangent space must be transformed to view space and shifted by the cu
 
 \emph{Gram-Schmidt process}: orthonormalization of linearly independent vectors to obtain an orthonormal base.
 
+
+TODO: fixme: gram shmidt è quello con cui si costruiscono tangente e bitangente da normale e noise. Poi si trasforma con TBN per riorentare sample kernel.
+
 Transformation matrix:
 \[
 \text{TBN} = 
@@ -441,7 +444,6 @@ To get a sample's view position:
 \begin{minted}[bgcolor=bg, fontsize=\footnotesize]{glsl}
 float occlusion = 0.0;
 for (int i = 0; i < KERNEL_SIZE; ++i) {
-    // get sample position:
     vec3 sample_point = tbn * sample_kernel[i];
     sample_point = (sample_point * kernel_radius) + origin;
     ...
@@ -449,27 +451,180 @@ for (int i = 0; i < KERNEL_SIZE; ++i) {
 
 \end{frame}
 
-\begin{frame}
+\begin{frame}[fragile]
 \frametitle{Projection}
+The overall process comprises:
+\begin{itemize}
+    \item use projection matrix to project in clip space
+    \item perform perspective divide
+    \item bias, to get coordinates in $ [0,1] $
+\end{itemize}
+
+\begin{minted}[bgcolor=bg, fontsize=\footnotesize]{glsl}
+    vec4 sample_point_ndc = projection_matrix * vec4(sample_point, 1.0);
+    sample_point_ndc.xy /= sample_point_ndc.w;
+    vec2 sample_point_uv = sample_point_ndc.xy * 0.5 + 0.5;
+    ...
+\end{minted}
+
+The variable \verb|sample_point_uv| represents the texture coordinates of the projected sample.
 
 \end{frame}
 
-\begin{frame}
+\begin{frame}[fragile]
 \frametitle{Depth Comparison}
+Compare the depth value in depth buffer (true rasterized geometry) with the depth value of the sample.
+
+Use the above defined \verb|sample_point_uv| as texture coordinates.
+
+\begin{minted}[bgcolor=bg, fontsize=\footnotesize]{glsl}
+    float real_depth = texture2D(t_depth, sample_point_uv).r;
+    float linear_real_depth = unproject_depth(real_depth);
+    float sample_depth = sample_point.z;
+    
+    float delta = linear_real_depth - sample_depth;
+    ...
+\end{minted}
+
+Discriminate on \verb|delta| value whether this sample contributes to occlusion or not.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Occlusion Computation: Naive Approach}
+Naive approach:
+\begin{minted}[bgcolor=bg, fontsize=\footnotesize]{glsl}
+    if (delta >= 0.0) {
+        occlusion += 1.0;
+    }
+    ...
+\end{minted}
+
+\begin{columns}
+    \begin{column}{0.45\linewidth}
+        Binary valued occlusion:
+        \begin{itemize}
+            \item too coarse, might generate artifacts
+            \item overshadows overlapping geometries, even if distant
+        \end{itemize}
+    \end{column}
+    \begin{column}{0.45\linewidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=0.8\linewidth]{images/occlusion_naive}
+        \end{figure}
+    \end{column}
+\end{columns}
 
 \end{frame}
 
-\begin{frame}
-\frametitle{Occlusion Computation}
+\begin{frame}[fragile]
+\frametitle{Occlusion Computation: Range Check}
+Range check inclusion:
+\begin{minted}[bgcolor=bg, fontsize=\footnotesize]{glsl}
+    float range_check = abs(linear_real_depth - origin.z)
+        < kernel_radius ? 1.0 : 0.0;
+    occlusion += (delta >= 0.0 ? 1.0 : 0.0) * range_check;
+    ...
+\end{minted}
+
+\begin{columns}
+    \begin{column}{0.45\linewidth}
+        Binary valued occlusion with range check:
+        \begin{itemize}
+            \item still coarse. Visible artifacts (see next slide)
+            \item overshadowing of distant geometries solved
+        \end{itemize}
+    \end{column}
+    \begin{column}{0.45\linewidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=0.8\linewidth]{images/occlusion_hard_range_check.png}
+        \end{figure}
+    \end{column}
+\end{columns}
 
 \end{frame}
 
+\begin{frame}[fragile]
+\frametitle{Occlusion Computation: Range Check (soft)}
+Soft range check inclusion:
+\begin{minted}[bgcolor=bg, fontsize=\footnotesize]{glsl}
+    float value = kernel_radius / abs(linear_real_depth - origin.z);
+    float range_check = smoothstep(0.0, 1.0, value);
+    occlusion += (delta >= 0.0 ? 1.0 : 0.0) * range_check;
+    ...
+\end{minted}
 
-% Qui metto tutte subsub con le tecniche che ho usato: tipo range check, min/max distance,.. No view space reconstruction. Quella ha subsection dedicata
-\subsubsection{Range Check}
-\subsubsection{Distance Constraints}
+\begin{columns}
+    \begin{column}{0.45\linewidth}
+        Continuous valued occlusion with range check:
+        \begin{itemize}
+            \item finer control over AO; artifacts removed/attenuated
+            \item overshadowing of distant geometries solved
+        \end{itemize}
+    \end{column}
+    \begin{column}{0.45\linewidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=0.8\linewidth]{images/occlusion_soft_range_check.png}
+        \end{figure}
+    \end{column}
+\end{columns}
 
-% FIXME: forse usare dei frame più che delle subsubsection per la roba sopra
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Occlusion Computation: Range Check (soft) II}
+Soft range check inclusion: resolves artifacts.
+\begin{minted}[bgcolor=bg, fontsize=\footnotesize]{glsl}
+    float value = kernel_radius / abs(linear_real_depth - origin.z);
+    float range_check = smoothstep(0.0, 1.0, value);
+    occlusion += (delta >= 0.0 ? 1.0 : 0.0) * range_check;
+    ...
+\end{minted}
+
+\begin{columns}
+    \begin{column}{0.45\linewidth}
+    \centering
+        Hard range check:
+        \begin{figure}
+            \centering
+            \vspace{-1.8ex}%
+            \includegraphics[width=0.8\linewidth]{images/feet_hard_range_check.png}
+        \end{figure}
+    \end{column}
+
+    \begin{column}{0.45\linewidth}
+        \centering
+        Soft range check
+        \begin{figure}
+            \centering
+            \vspace{-1.8ex}%
+            \includegraphics[width=0.8\linewidth]{images/feet_soft_range_check.png}
+        \end{figure}
+    \end{column}
+\end{columns}
+
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Distance Constraints}
+Add constraints to avoid artifacts at corners:
+\begin{itemize}
+    \item constraints applied on depth distance from actual geometry to sample
+    \item ability to tune the effect according to the scene
+\end{itemize}
+
+
+\begin{minted}[bgcolor=bg, fontsize=\footnotesize]{glsl}
+    float value = kernel_radius / abs(linear_real_depth - origin.z);
+    float range_check = smoothstep(0.0, 1.0, value);
+    float constraints = (delta >= min_distance && delta < max_distance);
+    occlusion += (constraints ? 1.0 : 0.0) * range_check;
+    ...
+\end{minted}
+
+\end{frame}
 
 \subsection{View Space Reconstruction}
 
