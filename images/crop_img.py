@@ -10,6 +10,7 @@ Positional arguments:
 
 For feet: 850 610 240 150
 For arms: 850 300 240 150
+For blur/no blur: 525 80 200 200
 """
 from PIL import Image
 import sys

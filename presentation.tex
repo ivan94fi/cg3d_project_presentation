@@ -42,7 +42,7 @@
 
 \let\nvec\vec
 \def\vec#1{\nvec{\vphantom t\smash{#1}}}
-
+\newcommand{\textplus}{\raisebox{.1\height}{\scalebox{.9}{\texttt{+}}}}
 
 \begin{document}
 \definecolor{bg}{rgb}{0.95,0.95,0.95}
@@ -623,6 +623,35 @@ Add constraints to avoid artifacts at corners:
     occlusion += (constraints ? 1.0 : 0.0) * range_check;
     ...
 \end{minted}
+\end{frame}
+
+\begin{frame}
+\frametitle{Blur}
+A blur pass is necessary to filter high frequency pattern introduced by noise texture.
+
+Implemented in a second shader, applied after SSAO shader.
+
+\vspace{0.6cm}
+
+\begin{columns}
+    \begin{column}{0.45\linewidth}
+        \centering
+        SSAO
+        \begin{figure}
+            \vspace{-1.8ex}%
+            \includegraphics[width=0.7\linewidth]{images/no_blur.png}
+        \end{figure}
+    \end{column}
+    
+    \begin{column}{0.45\linewidth}
+        \centering
+        SSAO + Blur
+        \begin{figure}
+            \vspace{-1.8ex}%
+            \includegraphics[width=0.7\linewidth]{images/blur.png}
+        \end{figure}
+    \end{column}
+\end{columns}
 
 \end{frame}
 
@@ -631,27 +660,127 @@ Add constraints to avoid artifacts at corners:
 \section{Results}
 
 \begin{frame}
-\frametitle{App: SSAO layer}
+\frametitle{Application}
+A web application was created to show the results of the project.
+
+Scene created with publicly available 3D models.
+\vspace{0.6cm}
+\begin{columns}
+    \begin{column}[t]{0.45\linewidth}
+        Four views available:
+        \begin{itemize}
+            \item complete
+            \item beauty
+            \item SSAO
+            \item SSAO + blur
+        \end{itemize}
+    \end{column}
+
+    \begin{column}[t]{0.45\linewidth}
+        Configurable parameters:
+        \begin{itemize}
+            \item kernel radius
+            \item minimum / maximum distances
+            \item range check factor
+            \item power factor
+        \end{itemize}
+    \end{column}
+
+\end{columns}
+
+\end{frame}
+
+\newcommand{\resultwidth}{0.9\linewidth}
+
+\begin{frame}
+\frametitle{App: SSAO Layer}
 \begin{figure}
     \centering
-    \includegraphics[width=0.95\linewidth]{images/app_ssao}
+    \includegraphics[width=\resultwidth]{images/app_ssao}
 \end{figure}
 
 \end{frame}
 
+\begin{frame}
+\frametitle{App: Blur Layer}
+\begin{figure}
+    \centering
+    \includegraphics[width=\resultwidth]{images/app_blur}
+\end{figure}
 
+\end{frame}
+
+\begin{frame}
+\frametitle{App: Beauty Layer}
+\begin{figure}
+    \centering
+    \includegraphics[width=\resultwidth]{images/app_beauty}
+\end{figure}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{App: Complete Layer}
+\begin{figure}
+    \centering
+    \includegraphics[width=\resultwidth]{images/app_complete}
+\end{figure}
+
+\end{frame}
 
 \section{Tools and Software}
+\begin{frame}
+\frametitle{Tools and Software}
 % threejs webgl buildpack node/npm heroku eslint
+The project was realized in Javascript, using the 3D graphics library three.js (WebGL).
+
+Node.js and its package manager npm were used to provide dependency management and deployment.
+
+The Webpack bundler was used to assemble the project. Hosted on Heroku.
+\begin{figure}
+    \centering
+    \includegraphics[width=0.6\linewidth]{images/software_logos.pdf}
+\end{figure}
+
+
+\end{frame}
 
 \section{Conclusions}
-% future work: depth-aware blur
 
-\section{?Problems? (Insert somewhere)}
-% halo effect on object
-% problem in calibrating parameters as every other paremetric techinques
-% highly dependent on scale of the scene
-% corrections help with results but give even more parameters
+\begin{frame}
+\frametitle{Known Problems}
+The encountered problems are those typical of SSAO technique:
+\begin{itemize}
+    \item halo effect on object borders (bleeding): due to ``blind'' blur
+    \item high number of parameters, hard to find a global optimum
+    \item SSAO effects greatly depends on scene scale and complexity
+\end{itemize}
+
+Possible solution for SSAO bleeding: depth aware blur.
+
+More recently, some advanced algorithms have been developed: HBAO/HBAO\textplus, SSDO, RTAO, etc.
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Conclusions}
+Features of this project:
+\begin{itemize}
+    \item fully functioning project realized with latest technologies
+    \item deployed on a public hosting service
+    \item showcases the Screen Space Ambient Occlusion technique
+    \item includes fixes and improvements over the original method
+    \item adopts a depth reconstruction methodology
+\end{itemize}
+
+Links to the project repository and online version:
+\begin{itemize}
+    \item \url{https://github.com/ivan94fi/cg3d_project_ssao}
+    \item \url{https://cg3d-project-ssao.herokuapp.com/}
+\end{itemize}
+
+\end{frame}
 
 % ##################### END #####################
 
