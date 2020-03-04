@@ -41,8 +41,8 @@
 \end{frame}
 }
 
-\let\nvec\vec
-\def\vec#1{\nvec{\vphantom t\smash{#1}}}
+%\let\nvec\vec
+%\def\vec#1{\nvec{\vphantom t\smash{#1}}}
 \newcommand{\textplus}{\raisebox{.1\height}{\scalebox{.9}{\texttt{+}}}}
 
 \begin{document}
@@ -310,7 +310,6 @@ Crytek's original implementation was never released. High level description avai
 
 \begin{frame}
 \frametitle{SSAO Scheme}
-TODO: labels
 \begin{figure}
     \centering
     \includegraphics[width=0.9\linewidth]{images/ssao_scheme}
@@ -321,11 +320,18 @@ TODO: labels
 \subsection{View Space Reconstruction}
 \begin{frame}
 \frametitle{Reconstruction From Depth}
-Base SSAO: pass a view-space position texture to SSAO shader. Heavy on memory and bandwidth, no processing.
+Base SSAO:
+\begin{itemize}
+    \item pass a view-space position texture to SSAO shader
+    \item heavy on memory and bandwidth, no processing
+\end{itemize}
 
-Extension: reconstruct view-space position from depth. No memory footprint (use depth buffer), some processing must be done in shader.
+Extension:
+\begin{itemize}
+    \item reconstruct view-space position from depth
+    \item no memory footprint (use depth buffer), some processing must be done in shader
+\end{itemize}
 \end{frame}
-
 
 \newcommand{\transform}[1]{$ \xrightarrow{\text{#1}} $}
 \begin{frame}
@@ -376,7 +382,7 @@ It holds:
 -\alpha \tan(fov/2) &\le \hspace{\halfdiff} \dfrac{x_e}{-z_e} &&\le \alpha \tan(fov/2)
 \end{alignat*}
 
-The extremal values represent coordinates for corners of the post-processing full-screen quad. For y coordinates is the same, without $ \alpha $.
+The extremal values represent coordinates for corners of the post-processing full-screen quad. For y coordinates it is the same formula, but without $ \alpha $.
 
 Interpolate them to reconstruct the coordinates for all middle pixels.
 
@@ -391,10 +397,10 @@ Solution:
     \text{view ray} = \bigl(\alpha \tan(fov/2)\:x_{clip}, \tan(fov/2)\:y_{clip}\bigr)
     \]
     \item Let the hardware interpolate the view ray, then reconstruct position in this way ($ z_e $ is the reconstructed view depth):
-    \begin{align*}
-    \text{view position} &= z_e \bigl(-\text{view ray}, 1\bigr)\\
-                         &= \bigl( x_e, y_e, z_e \bigr)
-    \end{align*}
+    \[
+    \text{view position} = z_e \bigl(-\text{view ray}, 1\bigr)
+                         = \bigl( x_e, y_e, z_e \bigr)
+    \]
 \end{itemize}
 
 \end{frame}
@@ -438,7 +444,6 @@ The function \mintinline[bgcolor=bg]{glsl}{unproject_depth} applies the transfor
 \end{frame}
 
 \subsection{Implementation Details}
-% TODO: scrivere che si usa deferred rendering, scrivere tutti i gbuffer che si usano, ..
 
 \begin{frame}[fragile]
 \frametitle{Sample kernel}
@@ -513,24 +518,23 @@ Random rotation vectors with z-component equal to 0: in tangent space this descr
 
 \begin{frame}
 \frametitle{Samples Reorientation I}
-Samples in tangent space must be transformed to view space and shifted by the current fragment's view position.
+Samples in tangent space must be transformed to view space and shifted by the current fragment's view position:
+\begin{enumerate}
+    \item compute an orthonormal base (normal, tangent, bitangent) from normal and noise vectors\textemdash{}uses \emph{Gram-Schmidt process}, orthonormalization of linearly independent vectors to obtain an orthonormal base:
+    \begin{gather*}
+        \vec{\tau} = \vec{r} - (\vec{r} \cdot \vec{n}) \vec{n}, \quad \vec{t} = \dfrac{\vec{\tau}}{|\vec{\tau}|} \\
+        \vec{b} = \vec{n} \times \vec{t}
+    \end{gather*}
+    \item Assemble transformation matrix:
+    \[
+    \text{TBN} =
+    \begin{bmatrix}
+    \vec{t} & \vec{b} & \vec{n}
+    \end{bmatrix} \in \mathbb{R}^{3\times3},
+    \quad \vec{v}_{\text{view-space}} = \text{TBN} \; \vec{v}_{\text{tangent-space}}\quad
+    \]
+\end{enumerate}
 
-\emph{Gram-Schmidt process}: orthonormalization of linearly independent vectors to obtain an orthonormal base.
-
-
-% TODO: fixme: gram shmidt è quello con cui si costruiscono tangente e bitangente da normale e noise. Poi si trasforma con TBN per riorentare sample kernel.
-
-Transformation matrix:
-\[
-\text{TBN} = 
-\begin{bmatrix}
-\vec{t} & \vec{b} & \vec{n}
-\end{bmatrix} \in \mathbb{R}^{3\times3}
-\]
-where $ \vec{t} $ is the tangent, $ \vec{b} $ is the bitangent and $ \vec{n} $ is the normal.
-
-Matrix application:
-\[ \vec{v}_{\text{view-space}} = \text{TBN} \; \vec{v}_{\text{tangent-space}} \]
 \end{frame}
 
 \begin{frame}[fragile]
@@ -543,9 +547,10 @@ vec3 bitangent = cross(normal, tangent);
 mat3 tbn = mat3(tangent, bitangent, normal);
 \end{minted}
 
+\vspace{-0.2cm}
 \begin{figure}
-    \includegraphics[width=0.7\linewidth]{images/kernel_reorientation.pdf}
     \centering
+    \includegraphics[width=0.7\linewidth]{images/kernel_reorientation.pdf}
 \end{figure}
 
 \end{frame}
