@@ -11,6 +11,7 @@
 \usepackage[absolute,overlay]{textpos}
 \usepackage[noend,noline,tworuled]{algorithm2e}
 \usepackage{minted}
+\usepackage{calc}
 \setlength{\parskip}{\smallskipamount}
 
 \setbeamertemplate{navigation symbols}{}
@@ -317,9 +318,127 @@ TODO: labels
 
 \end{frame}
 
-\subsection{Implementation Details}
-% scrivere che si usa deferred rendering, scrivere tutti i gbuffer che si usano, ..
+\subsection{View Space Reconstruction}
+\begin{frame}
+\frametitle{Reconstruction From Depth}
+Base SSAO: pass a view-space position texture to SSAO shader. Heavy on memory and bandwidth, no processing.
 
+Extension: reconstruct view-space position from depth. No memory footprint (use depth buffer), some processing must be done in shader.
+\end{frame}
+
+
+\newcommand{\transform}[1]{$ \xrightarrow{\text{#1}} $}
+\begin{frame}
+
+\frametitle{Background: OpenGL pipeline}
+Coordinates: object \transform{MVP} clip \transform{clip/w-divide} NDC \transform{viewport} window.
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\linewidth]{images/coordinate_systems.png}
+\end{figure}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{View Space Z from Depth Buffer}
+\label{frame:viewspace-from-depth-buffer}
+
+Transformation of z (from view to NDC):
+\[
+z_{ndc} = \dfrac{z_{clip}}{w_{clip}} = \dfrac{-\dfrac{f+n}{f-n} z_e -2 \dfrac{fn}{f-n}}{-z_e} = \dfrac{\beta z_e + \gamma}{-z_e}
+\]
+
+Depth value written in depth buffer:
+\[
+d = z_{ndc} * 0.5 + 0.5 = \dfrac{(\beta - 1) z_e + \gamma}{-2z_e}
+\]
+
+View space position can be reconstructed from depth buffer, given factors $ \beta $ and $ \gamma $ (which depend on $ f $ and $ n $):
+
+\[
+z_e = \dfrac{\gamma}{1-2d-\beta}
+\]
+\end{frame}
+
+
+\begin{frame}
+\frametitle{View Space X and Y}
+Transformation of x (from view to NDC):
+\[
+x_{ndc} = \dfrac{x_{clip}}{w_{clip}} = \dfrac{x_e}{-z_e \alpha \tan(fov/2)}, \quad -1 \le x_{ndc} \le 1
+\]
+
+\newlength\halfdiff
+\setlength\halfdiff{( \widthof{$ \dfrac{x_e}{-z_e \alpha \tan(fov/2)} $} - \widthof{$\dfrac{x_e}{-z_e}$} ) / 2}
+It holds:
+\begin{alignat*}{2}
+-1 &\le \dfrac{x_e}{-z_e \alpha \tan(fov/2)} &&\le 1 \\
+-\alpha \tan(fov/2) &\le \hspace{\halfdiff} \dfrac{x_e}{-z_e} &&\le \alpha \tan(fov/2)
+\end{alignat*}
+
+The extremal values represent coordinates for corners of the post-processing full-screen quad. For y coordinates is the same, without $ \alpha $.
+
+Interpolate them to reconstruct the coordinates for all middle pixels.
+
+\end{frame}
+
+\begin{frame}
+\frametitle{View Ray}
+Solution: 
+\begin{itemize}
+    \item construct a 2D vector with extremal values multiplied by clip coordinates (called \emph{view ray}):
+    \[
+    \text{view ray} = \bigl(\alpha \tan(fov/2)\:x_{clip}, \tan(fov/2)\:y_{clip}\bigr)
+    \]
+    \item Let the hardware interpolate the view ray, then reconstruct position in this way ($ z_e $ is the reconstructed view depth):
+    \begin{align*}
+    \text{view position} &= z_e \bigl(-\text{view ray}, 1\bigr)\\
+                         &= \bigl( x_e, y_e, z_e \bigr)
+    \end{align*}
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Vertex Shader}
+\begin{minted}[bgcolor=bg,fontsize=\footnotesize]{glsl}
+...
+void main() {
+    vUv = uv;
+    vec4 clip = MVP * vec4(position, 1.0);
+    view_ray = vec3(-tan(b) * a * clip.x, -tan(b) * clip.y, 1.0);
+    gl_Position = clip;
+}
+
+\end{minted}
+where \mintinline[bgcolor=bg]{glsl}{b} is $ fov/2 $.
+
+Same as before, but prepare 1.0 in last component in advance and pre-multiply -1 in the first two components.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Fragment Shader}
+\begin{minted}[bgcolor=bg,fontsize=\footnotesize]{glsl}
+...
+float unproject_depth(const in float depth) {
+    return (camera_near * camera_far) /
+    ((camera_far - camera_near) * depth - camera_far);
+}
+void main() {
+    ...
+    float depth = texture2D(depth_texture, tex_coords).x;
+    float view_z = unproject_depth(depth);
+    vec3 origin = view_ray * view_z;
+    ...
+\end{minted}
+where \mintinline[bgcolor=bg]{glsl}{origin} is the view space position of the geometry rasterized in the current fragment.
+
+The function \mintinline[bgcolor=bg]{glsl}{unproject_depth} applies the transformation (depth~$ \mapsto $~view space) defined on slide~\ref{frame:viewspace-from-depth-buffer}.
+
+\end{frame}
+
+\subsection{Implementation Details}
+% TODO: scrivere che si usa deferred rendering, scrivere tutti i gbuffer che si usano, ..
 
 \begin{frame}[fragile]
 \frametitle{Sample kernel}
@@ -328,7 +447,7 @@ Uniform variable in fragment shader:
 uniform vec3 sample_kernel[KERNEL_SIZE];
 \end{minted}
 
-Consists in an array of \emph{random} vectors s.t. for each vector $ k $ it holds:
+It is an array of uniformly \emph{random} vectors s.t. for each vector $ k $ it holds:
 \begin{align*}
 -1 & \le k.x \le 1 \\
 -1 & \le k.y \le 1 \\
@@ -399,7 +518,7 @@ Samples in tangent space must be transformed to view space and shifted by the cu
 \emph{Gram-Schmidt process}: orthonormalization of linearly independent vectors to obtain an orthonormal base.
 
 
-TODO: fixme: gram shmidt è quello con cui si costruiscono tangente e bitangente da normale e noise. Poi si trasforma con TBN per riorentare sample kernel.
+% TODO: fixme: gram shmidt è quello con cui si costruiscono tangente e bitangente da normale e noise. Poi si trasforma con TBN per riorentare sample kernel.
 
 Transformation matrix:
 \[
@@ -655,7 +774,6 @@ Implemented in a second shader, applied after SSAO shader.
 
 \end{frame}
 
-\subsection{View Space Reconstruction}
 
 \section{Results}
 
