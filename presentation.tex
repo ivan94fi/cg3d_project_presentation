@@ -12,6 +12,8 @@
 \usepackage[noend,noline,tworuled]{algorithm2e}
 \usepackage{minted}
 \usepackage{calc}
+\usepackage{xcolor}
+
 \setlength{\parskip}{\smallskipamount}
 
 \setbeamertemplate{navigation symbols}{}
@@ -27,13 +29,11 @@
     \end{minipage}
 }
 
-
 \author[Ivan Prosperi]{
     \texorpdfstring{\usebox{\authbox}}{Ivan Prosperi}}
 \institute[]{Universit\`a degli Studi di Firenze}
 \date{}
 \logo{\textcolor{black}{\includegraphics[width=0.10\textwidth]{images/logo_unifi/stemma_grigio.pdf}}}
-
 
 \AtBeginSection{%
     \begin{frame}
@@ -44,9 +44,12 @@
 %\let\nvec\vec
 %\def\vec#1{\nvec{\vphantom t\smash{#1}}}
 \newcommand{\textplus}{\raisebox{.1\height}{\scalebox{.9}{\texttt{+}}}}
-
+\newcommand{\transform}[1]{$ \xrightarrow{\text{#1}} $}
+\newcommand{\redtext}[1]{\textcolor{myred}{#1}}
+\definecolor{myred}{RGB}{204, 0, 0}
 \begin{document}
 \definecolor{bg}{rgb}{0.95,0.95,0.95}
+\newcommand{\glslvar}[1]{\mintinline[bgcolor=bg]{glsl}{#1}}
 
 \begin{frame}
     \titlepage
@@ -67,10 +70,10 @@
 \begin{frame}
 \frametitle{Ambient Occlusion}
 % cosa è, immagini con/senza ao
-Ambient occlusion is a shading technique computes the degree of exposure to ambient light in a 3D scene:
+Ambient occlusion is a shading technique that computes the \emph{degree of exposure} to ambient light in a 3D scene:
 \begin{itemize}
-    \item open surfaces, planar geometries, ``floating'' geometries: fully exposed to ambient light
-    \item corners, hidden geometries, tight gaps between objects, creases: appear shaded in real life, ambient light does not reach them at full intensity
+    \item \redtext{open surfaces}, planar geometries, ``floating'' geometries: fully exposed to ambient light
+    \item \redtext{hidden geometries}, corners, tight gaps between objects, creases: appear shaded in real life, ambient light does not reach them at full intensity
 \end{itemize}
 
 \end{frame}
@@ -84,7 +87,7 @@ Ambient occlusion is a shading technique computes the degree of exposure to ambi
 \end{figure}
 
 \vspace*{-8px}
-\footnotetext[1]{\tiny Landis, H. Production-Ready Global Illumination (2004).}
+\footnotetext{Landis, H. Production-Ready Global Illumination (2004).}
 \end{frame}
 
 \begin{frame}
@@ -105,11 +108,11 @@ Ambient occlusion is a shading technique computes the degree of exposure to ambi
 % costoso in caso di real time
 \textbf{Global Illumination (GI)}:
 \begin{itemize}
-    \item \emph{considers} physically correct light phenomena
-    \item \emph{is} a \underline{global method}: illumination at each point is a function of other geometry in the scene
-    \item \emph{accounts} for light rays (possibly infinite) bounces
-    \item \emph{implements} indirect illumination
-    \item \emph{comprises} reflection, refraction, shadows, diffuse inter-reflections, caustics, etc
+    \item \redtext{considers} physically correct light phenomena
+    \item \redtext{is} a \underline{global method}: illumination at each point is a function of other geometry in the scene
+    \item \redtext{accounts} for light rays (possibly infinite) bounces
+    \item \redtext{implements} indirect illumination
+    \item \redtext{comprises} reflection, refraction, shadows, diffuse inter-reflections, caustics, etc
 \end{itemize}
 
 Ambient occlusion approximates some aspects of Global Illumination.
@@ -138,7 +141,7 @@ Furthermore, current real-time graphics hardware is mostly based on rasterizatio
 Therefore, \textbf{GI is not reproducible in real time rendering} with the current technologies and hardware.
 \end{frame}
 
-\begin{frame}[allowframebreaks]
+\begin{frame}%[allowframebreaks]
 \frametitle{Multipass Rendering}
 % Far vedere esempio di multipass rendering
 % Scrivere tipo "used for shadow mapping, normal mapping, etc"
@@ -151,10 +154,10 @@ Multipass rendering (and deferred shading) are employed as low-cost approximatio
     \item \textbf{ambient occlusion}
 \end{itemize}
 
-\begin{figure}
-    \centering
-    \includegraphics[width=0.9\linewidth]{images/reflection_map.jpg}
-\end{figure}
+%\begin{figure}
+%    \centering
+%    \includegraphics[width=0.9\linewidth]{images/reflection_map.jpg}
+%\end{figure}
 
 \end{frame}
 
@@ -214,68 +217,68 @@ Screen Space Ambient Occlusion (SSAO):
 \frametitle{Screen Space}
 SSAO is a \emph{screen space} (ss) technique:
 \begin{itemize}
-    \item uses \emph{deferred rendering} to split geometry render from light computation:
+    \item uses \redtext{deferred rendering} to split geometry render from light computation:
     \begin{itemize}
-        \item pass 1: render geometry/depth in off-screen buffers (g-buffer)
-        \item pass 2: use g-buffer's rendered scene as texture to apply lighting
+        \item pass 1: \redtext{render geometry/depth} in off-screen buffers (g-buffer)
+        \item pass 2: \redtext{use g-buffers} as textures to apply lighting
     \end{itemize}
     \item ss effects applied in pass 2 $ \Rightarrow $ screen space resolution dependent
     \item application of ss techniques does not depend on scene complexity (roughly)
 \end{itemize}
 \end{frame}
 
-\begin{frame}
-\frametitle{Deferred Rendering Pipeline}
-\begin{figure}
-    \centering
-    \includegraphics[width=0.9\linewidth]{images/deferred_rendering.pdf}
-\end{figure}
-
-\SetKwFor{ForEach}{for each}{}{}
-\begin{columns}
-    \begin{column}[t]{0.44\linewidth}
-        Forward rendering: $\mathcal{O}(N L R)$
-        \smaller
-        \begin{algorithm}[H]
-            \ForEach{object}{
-                \ForEach{fragment}{
-                    \ForEach{light}{
-                        compute lighting\;
-                    }
-                }
-            }
-        \end{algorithm}
-    \end{column}
-    
-    \begin{column}[t]{0.44\linewidth}
-        Deferred rendering: $\mathcal{O}((N{+}L)R)$
-        \smaller
-        \begin{algorithm}[H]
-            \ForEach{object}{
-                \ForEach{fragment}{
-                    fill g-buffer\;
-                }
-            }
-            \ForEach{light}{
-                \ForEach{fragment}{
-                    fetch g-buffer\;
-                    compute lighting\;
-                }
-            }
-        \end{algorithm}
-    \end{column}
-\end{columns}
-\end{frame}
+%\begin{frame}
+%\frametitle{Deferred Rendering Pipeline}
+%\begin{figure}
+%    \centering
+%    \includegraphics[width=0.9\linewidth]{images/deferred_rendering.pdf}
+%\end{figure}
+%
+%\SetKwFor{ForEach}{for each}{}{}
+%\begin{columns}
+%    \begin{column}[t]{0.44\linewidth}
+%        Forward rendering: $\mathcal{O}(N L R)$
+%        \smaller
+%        \begin{algorithm}[H]
+%            \ForEach{object}{
+%                \ForEach{fragment}{
+%                    \ForEach{light}{
+%                        compute lighting\;
+%                    }
+%                }
+%            }
+%        \end{algorithm}
+%    \end{column}
+%    
+%    \begin{column}[t]{0.44\linewidth}
+%        Deferred rendering: $\mathcal{O}((N{+}L)R)$
+%        \smaller
+%        \begin{algorithm}[H]
+%            \ForEach{object}{
+%                \ForEach{fragment}{
+%                    fill g-buffer\;
+%                }
+%            }
+%            \ForEach{light}{
+%                \ForEach{fragment}{
+%                    fetch g-buffer\;
+%                    compute lighting\;
+%                }
+%            }
+%        \end{algorithm}
+%    \end{column}
+%\end{columns}
+%\end{frame}
 
 \begin{frame}
 \frametitle{SSAO Approach}
 SSAO fundamental ideas:
 \begin{itemize}
-    \item leverage deferred rendering (post processing)
-    \item use available geometry info to approximate indirect lighting
-    \item use of depth buffer for geometry reconstruction (more on this later)
-    \item computation of a screen space occlusion map based on geometries surrounding current rasterized fragment
-    \item blending of occlusion map with ambient lighting to shade appropriate portions of the image
+    \item leverage deferred rendering (\redtext{post processing})
+    \item use available geometry info to \redtext{approximate indirect lighting}
+    \item computation of a \redtext{screen space occlusion map} based on geometries surrounding current rasterized fragment
+    \item \redtext{blending} of occlusion map with ambient lighting to shade appropriate portions of the image
+    \item (use of depth buffer for geometry reconstruction\textemdash{}more on this later)
 \end{itemize}
 \end{frame}
 
@@ -291,7 +294,7 @@ Crytek's original implementation was never released. High level description avai
 \begin{algorithm}[H]
     render geometry\;
     \ForEach{fragment \textup{in geometry g-buffer}}{
-        reconstruct \emph{fragment}'s view space position\;
+        sample \emph{fragment}'s view space position\;
         sample some points in view space neighborhood\;
         \ForEach{sample}{
             project \emph{sample} in clip space\;
@@ -322,44 +325,43 @@ Crytek's original implementation was never released. High level description avai
 \frametitle{Reconstruction From Depth}
 Base SSAO:
 \begin{itemize}
-    \item pass a view-space position texture to SSAO shader
-    \item heavy on memory and bandwidth, no processing
+    \item \redtext{pass} a view-space position texture to SSAO shader
+    \item \redtext{heavy on memory} and bandwidth, \redtext{no processing}
 \end{itemize}
 
 Extension:
 \begin{itemize}
-    \item reconstruct view-space position from depth
-    \item no memory footprint (use depth buffer), some processing must be done in shader
+    \item \redtext{reconstruct} view-space position from depth
+    \item \redtext{no memory footprint} (use depth buffer), \redtext{requires processing} in shaders
 \end{itemize}
 \end{frame}
 
-\newcommand{\transform}[1]{$ \xrightarrow{\text{#1}} $}
-\begin{frame}
-
-\frametitle{Background: OpenGL pipeline}
-Coordinates: object \transform{MVP} clip \transform{clip/w-divide} NDC \transform{viewport} window.
-\begin{figure}
-    \centering
-    \includegraphics[width=0.9\linewidth]{images/coordinate_systems.png}
-\end{figure}
-
-\end{frame}
+%\begin{frame}
+%
+%\frametitle{Background: OpenGL pipeline}
+%Coordinates: object \transform{MVP} clip \transform{clip/w-divide} NDC \transform{viewport} window.
+%\begin{figure}
+%    \centering
+%    \includegraphics[width=0.9\linewidth]{images/coordinate_systems.png}
+%\end{figure}
+%
+%\end{frame}
 
 \begin{frame}
 \frametitle{View Space Z from Depth Buffer}
 \label{frame:viewspace-from-depth-buffer}
 
-Transformation of z (from view to NDC):
+Transformation of z (\redtext{view space $ \mapsto $ NDC}):
 \[
 z_{ndc} = \dfrac{z_{clip}}{w_{clip}} = \dfrac{-\dfrac{f+n}{f-n} z_e -2 \dfrac{fn}{f-n}}{-z_e} = \dfrac{\beta z_e + \gamma}{-z_e}
 \]
 
-Depth value written in depth buffer:
+Depth value written in depth buffer (\redtext{NDC $ \mapsto $ depth}):
 \[
 d = z_{ndc} * 0.5 + 0.5 = \dfrac{(\beta - 1) z_e + \gamma}{-2z_e}
 \]
 
-View space position can be reconstructed from depth buffer, given factors $ \beta $ and $ \gamma $ (which depend on $ f $ and $ n $):
+View space reconstruction from depth buffer (\redtext{depth $ \mapsto $ view space}):
 
 \[
 z_e = \dfrac{\gamma}{1-2d-\beta}
@@ -369,36 +371,34 @@ z_e = \dfrac{\gamma}{1-2d-\beta}
 
 \begin{frame}
 \frametitle{View Space X and Y}
-Transformation of x (from view to NDC):
+Transformation of x (\redtext{view space $ \mapsto $ NDC}):
 \[
 x_{ndc} = \dfrac{x_{clip}}{w_{clip}} = \dfrac{x_e}{-z_e \alpha \tan(fov/2)}, \quad -1 \le x_{ndc} \le 1
 \]
 
-\newlength\halfdiff
-\setlength\halfdiff{( \widthof{$ \dfrac{x_e}{-z_e \alpha \tan(fov/2)} $} - \widthof{$\dfrac{x_e}{-z_e}$} ) / 2}
+\newlength{\halfdiff}
+\setlength\halfdiff{( \widthof{$ \dfrac{x_e}{-z_e \alpha \tan(fov/2)} $} - \widthof{$x_e$} ) / 2}
 It holds:
 \begin{alignat*}{2}
 -1 &\le \dfrac{x_e}{-z_e \alpha \tan(fov/2)} &&\le 1 \\
--\alpha \tan(fov/2) &\le \hspace{\halfdiff} \dfrac{x_e}{-z_e} &&\le \alpha \tan(fov/2)
+-\alpha \tan(fov/2)\,z_e &\le \hspace{\halfdiff} x_e &&\le \alpha \tan(fov/2)\,z_e
 \end{alignat*}
 
-The extremal values represent coordinates for corners of the post-processing full-screen quad. For y coordinates it is the same formula, but without $ \alpha $.
-
-Interpolate them to reconstruct the coordinates for all middle pixels.
+Extremal values: \redtext{corners} of the post-processing \redtext{full-screen quad}.
 
 \end{frame}
 
 \begin{frame}
 \frametitle{View Ray}
-Solution: 
+\redtext{Solution}: 
 \begin{itemize}
-    \item construct a 2D vector with extremal values multiplied by clip coordinates (called \emph{view ray}):
+    \item construct a 2-dimensional vector, called \redtext{view ray}:
     \[
-    \text{view ray} = \bigl(\alpha \tan(fov/2)\:x_{clip}, \tan(fov/2)\:y_{clip}\bigr)
+    \text{\redtext{view ray}} = \bigl(\alpha \tan(fov/2)\:x_{clip}, \tan(fov/2)\:y_{clip}\bigr)
     \]
-    \item Let the hardware interpolate the view ray, then reconstruct position in this way ($ z_e $ is the reconstructed view depth):
+    \item Let the hardware interpolate the view ray, then reconstruct position:
     \[
-    \text{view position} = z_e \bigl(-\text{view ray}, 1\bigr)
+    \text{\redtext{view position}} = z_e \bigl(-\text{\redtext{view ray}}, 1\bigr)
                          = \bigl( x_e, y_e, z_e \bigr)
     \]
 \end{itemize}
@@ -410,26 +410,21 @@ Solution:
 \begin{minted}[bgcolor=bg,fontsize=\footnotesize]{glsl}
 ...
 void main() {
-    vUv = uv;
     vec4 clip = MVP * vec4(position, 1.0);
-    view_ray = vec3(-tan(b) * a * clip.x, -tan(b) * clip.y, 1.0);
+    view_ray = vec3(-tan(hfov) * a * clip.x, -tan(hfov) * clip.y, 1.0);
     gl_Position = clip;
 }
 
 \end{minted}
-where \mintinline[bgcolor=bg]{glsl}{b} is $ fov/2 $.
+where \glslvar{MVP} is the model-view-projection matrix, \glslvar{a} is the aspect ratio $ \alpha $ and \glslvar{hfov} is $ fov/2 $.
 
-Same as before, but prepare 1.0 in last component in advance and pre-multiply -1 in the first two components.
+
 \end{frame}
 
 \begin{frame}[fragile]
 \frametitle{Fragment Shader}
 \begin{minted}[bgcolor=bg,fontsize=\footnotesize]{glsl}
 ...
-float unproject_depth(const in float depth) {
-    return (camera_near * camera_far) /
-    ((camera_far - camera_near) * depth - camera_far);
-}
 void main() {
     ...
     float depth = texture2D(depth_texture, tex_coords).x;
@@ -437,9 +432,9 @@ void main() {
     vec3 origin = view_ray * view_z;
     ...
 \end{minted}
-where \mintinline[bgcolor=bg]{glsl}{origin} is the view space position of the geometry rasterized in the current fragment.
+where \glslvar{origin} is the view space position of the geometry rasterized in the current fragment.
 
-The function \mintinline[bgcolor=bg]{glsl}{unproject_depth} applies the transformation (depth~$ \mapsto $~view space) defined on slide~\ref{frame:viewspace-from-depth-buffer}.
+The function \glslvar{unproject_depth} applies the transformation (\redtext{depth~$ \mapsto $~view space}) defined on slide~\redtext{\ref{frame:viewspace-from-depth-buffer}}.
 
 \end{frame}
 
@@ -447,24 +442,28 @@ The function \mintinline[bgcolor=bg]{glsl}{unproject_depth} applies the transfor
 
 \begin{frame}[fragile]
 \frametitle{Sample kernel}
-Uniform variable in fragment shader:
+\redtext{Uniform variable} in fragment shader:
 \begin{minted}[bgcolor=bg,fontsize=\footnotesize]{glsl}
 uniform vec3 sample_kernel[KERNEL_SIZE];
 \end{minted}
 
-It is an array of uniformly \emph{random} vectors s.t. for each vector $ k $ it holds:
+For each vector, components are random numbers s.t.:
 \begin{align*}
--1 & \le k.x \le 1 \\
--1 & \le k.y \le 1 \\
-0 & \le k.z \le 1
+-1 & \le x \le 1 \\
+-1 & \le y \le 1 \\
+0 & \le z \le 1
 \end{align*}
 
-Forms a hemisphere centered on the origin $ (0, 0, 0) $ $ \Rightarrow $ Use \emph{tangent space}. Must be reoriented inside the shader.
+Forms a \redtext{hemisphere} centered in $ (0, 0, 0) $ (\redtext{tangent space}).
+
+Must be \redtext{reoriented} inside the shader.
 \end{frame}
 
 \begin{frame}[fragile]
 \frametitle{Non-Uniformly Distributed Samples}
-Samples near the origin are more interesting: use \emph{accelerating interpolation function} to scale the samples:
+Samples near the origin are more interesting.
+
+\redtext{Accelerating interpolation function} to scale the samples:
 \begin{minted}[bgcolor=bg,fontsize=\footnotesize]{c++}
 float scale = (float)i / KERNEL_SIZE; // i is the loop variable
 scale = lerp(0.1f, 1.0f, scale * scale);
@@ -486,7 +485,7 @@ sample *= scale;
     
     \begin{column}{0.45\linewidth}
         \centering
-        \textbf{Non uniform samples}:
+        \redtext{Non uniform samples}:
         \begin{figure}
             \centering
             \vspace{-1.8ex}%
@@ -500,41 +499,42 @@ sample *= scale;
 
 \begin{frame}[fragile]
 \frametitle{Random Kernel Rotations}
-To obtain convincing results, a high number of samples must be used $ \Rightarrow $ High memory usage
+For convincing results: \redtext{high sampling rate} $ \Rightarrow $ Performance degradation.
 
-Solution: use a random $ 4\times4 $ noise texture \emph{tiled} over the screen to rotate the samples.
+\redtext{Solution}: use a random $ 4\times4 $ noise texture to \redtext{rotate} samples:
 \begin{minted}[bgcolor=bg, fontsize=\footnotesize]{c++}
 noise_texture[i] = Vector3(random(-1,1), random(-1,1), 0);
 \end{minted}
-\vspace{-1cm}
+
+\redtext{Tile} the texture over the entire screen:
 \begin{minted}[bgcolor=bg, fontsize=\footnotesize]{c++}
 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 \end{minted} 
 
-Random rotation vectors with z-component equal to 0: in tangent space this describes a rotation around z-axis, that is, around the normal.
-
 \end{frame}
 
 \begin{frame}
 \frametitle{Samples Reorientation I}
-Samples in tangent space must be transformed to view space and shifted by the current fragment's view position:
+Transform samples (\redtext{tangent space $ \mapsto $ view space}):
 \begin{enumerate}
-    \item compute an orthonormal base (normal, tangent, bitangent) from normal and noise vectors\textemdash{}uses \emph{Gram-Schmidt process}, orthonormalization of linearly independent vectors to obtain an orthonormal base:
+    \item compute an orthonormal base (normal, tangent, bitangent) from normal and noise vectors\footnotemark:
     \begin{gather*}
         \vec{\tau} = \vec{r} - (\vec{r} \cdot \vec{n}) \vec{n}, \quad \vec{t} = \dfrac{\vec{\tau}}{|\vec{\tau}|} \\
         \vec{b} = \vec{n} \times \vec{t}
     \end{gather*}
-    \item Assemble transformation matrix:
+    \item Transform:
     \[
+    \vec{v}_{\text{view-space}} = \text{TBN} \; \vec{v}_{\text{tangent-space}}, \quad
     \text{TBN} =
     \begin{bmatrix}
     \vec{t} & \vec{b} & \vec{n}
-    \end{bmatrix} \in \mathbb{R}^{3\times3},
-    \quad \vec{v}_{\text{view-space}} = \text{TBN} \; \vec{v}_{\text{tangent-space}}\quad
+    \end{bmatrix} \in \mathbb{R}^{3\times3}
     \]
 \end{enumerate}
 
+%\vspace*{-8px}
+\footnotetext{Gram–Schmidt process for orthonormalization.}
 \end{frame}
 
 \begin{frame}[fragile]
@@ -557,17 +557,15 @@ mat3 tbn = mat3(tangent, bitangent, normal);
 
 \begin{frame}[fragile]
 \frametitle{Sample Reorientation III}
-SSAO shader main loop.
-
 To get a sample's view position:
 \begin{itemize}
-    \item reorient sample
-    \item adjust radius
-    \item add origin point (fragment's view space)
+    \item \redtext{reorient} sample
+    \item \redtext{scale} sample to radius
+    \item \redtext{translate} sample: add origin (fragment's view space position)
 \end{itemize}
 \begin{minted}[bgcolor=bg, fontsize=\footnotesize]{glsl}
 float occlusion = 0.0;
-for (int i = 0; i < KERNEL_SIZE; ++i) {
+for (int i = 0; i < KERNEL_SIZE; ++i) { // SSAO shader main loop
     vec3 sample_point = tbn * sample_kernel[i];
     sample_point = (sample_point * kernel_radius) + origin;
     ...
@@ -577,11 +575,11 @@ for (int i = 0; i < KERNEL_SIZE; ++i) {
 
 \begin{frame}[fragile]
 \frametitle{Projection}
-The overall process comprises:
+Steps:
 \begin{itemize}
-    \item use projection matrix to project in clip space
-    \item perform perspective divide
-    \item bias, to get coordinates in $ [0,1] $
+    \item \redtext{project} sample in clip space
+    \item perform \redtext{perspective divide}
+    \item \redtext{bias}, to get coordinates in $\ [0,1] $
 \end{itemize}
 
 \begin{minted}[bgcolor=bg, fontsize=\footnotesize]{glsl}
@@ -591,15 +589,17 @@ The overall process comprises:
     ...
 \end{minted}
 
-The variable \verb|sample_point_uv| represents the texture coordinates of the projected sample.
+The variable \glslvar{sample_point_uv} represents the \redtext{texture coordinates} of the projected sample.
 
 \end{frame}
 
 \begin{frame}[fragile]
 \frametitle{Depth Comparison}
-Compare the depth value in depth buffer (true rasterized geometry) with the depth value of the sample.
-
-Use the above defined \verb|sample_point_uv| as texture coordinates.
+\redtext{Compare}:
+\begin{itemize}
+    \item \redtext{depth buffer}'s depth value (true rasterized geometry)
+    \item \redtext{sample}'s depth value
+\end{itemize}
 
 \begin{minted}[bgcolor=bg, fontsize=\footnotesize]{glsl}
     float real_depth = texture2D(t_depth, sample_point_uv).r;
@@ -610,7 +610,7 @@ Use the above defined \verb|sample_point_uv| as texture coordinates.
     ...
 \end{minted}
 
-Discriminate on \verb|delta| value whether this sample contributes to occlusion or not.
+Discriminate on \glslvar{delta} value whether this sample contributes to occlusion or not.
 \end{frame}
 
 \begin{frame}[fragile]
@@ -625,10 +625,10 @@ Naive approach:
 
 \begin{columns}
     \begin{column}{0.45\linewidth}
-        Binary valued occlusion:
+        \redtext{Binary} valued occlusion:
         \begin{itemize}
-            \item too coarse, might generate artifacts
-            \item overshadows overlapping geometries, even if distant
+            \item \redtext{too coarse}, might generate artifacts
+            \item \redtext{overshadows} overlapping geometries, even if distant
         \end{itemize}
     \end{column}
     \begin{column}{0.45\linewidth}
@@ -653,10 +653,10 @@ Range check inclusion:
 
 \begin{columns}
     \begin{column}{0.45\linewidth}
-        Binary valued occlusion with range check:
+        \redtext{Binary} valued occlusion with range check:
         \begin{itemize}
-            \item still coarse. Visible artifacts (see next slide)
-            \item overshadowing of distant geometries solved
+            \item \redtext{still coarse}. Visible artifacts (see next slides)
+            \item \redtext{solves} overshadowing of distant geometries 
         \end{itemize}
     \end{column}
     \begin{column}{0.45\linewidth}
@@ -681,10 +681,10 @@ Soft range check inclusion:
 
 \begin{columns}
     \begin{column}{0.45\linewidth}
-        Continuous valued occlusion with range check:
+        \redtext{Continuous} valued occlusion with range check:
         \begin{itemize}
-            \item finer control over AO; artifacts removed/attenuated
-            \item overshadowing of distant geometries solved
+            \item \redtext{finer} control: artifacts removed/attenuated
+            \item \redtext{solves} overshadowing of distant geometries 
         \end{itemize}
     \end{column}
     \begin{column}{0.45\linewidth}
@@ -699,7 +699,7 @@ Soft range check inclusion:
 
 \begin{frame}[fragile]
 \frametitle{Occlusion Computation: Range Check (soft) II}
-Soft range check inclusion: resolves artifacts.
+Soft range check inclusion: removes artifacts.
 \begin{minted}[bgcolor=bg, fontsize=\footnotesize]{glsl}
     float value = kernel_radius / abs(linear_real_depth - origin.z);
     float range_check = smoothstep(0.0, 1.0, value);
@@ -713,7 +713,7 @@ Soft range check inclusion: resolves artifacts.
         Hard range check:
         \begin{figure}
             \centering
-            \vspace{-1.8ex}%
+            \vspace{-1ex}%
             \includegraphics[width=0.8\linewidth]{images/feet_hard_range_check.png}
         \end{figure}
     \end{column}
@@ -723,7 +723,7 @@ Soft range check inclusion: resolves artifacts.
         Soft range check
         \begin{figure}
             \centering
-            \vspace{-1.8ex}%
+            \vspace{-1ex}%
             \includegraphics[width=0.8\linewidth]{images/feet_soft_range_check.png}
         \end{figure}
     \end{column}
@@ -733,12 +733,11 @@ Soft range check inclusion: resolves artifacts.
 
 \begin{frame}[fragile]
 \frametitle{Distance Constraints}
-Add constraints to avoid artifacts at corners:
+Add constraints to avoid some artifacts:
 \begin{itemize}
-    \item constraints applied on depth distance from actual geometry to sample
+    \item constraints applied on \glslvar{delta} (geometry depth - sample depth)
     \item ability to tune the effect according to the scene
 \end{itemize}
-
 
 \begin{minted}[bgcolor=bg, fontsize=\footnotesize]{glsl}
     float value = kernel_radius / abs(linear_real_depth - origin.z);
@@ -751,7 +750,7 @@ Add constraints to avoid artifacts at corners:
 
 \begin{frame}
 \frametitle{Blur}
-A blur pass is necessary to filter high frequency pattern introduced by noise texture.
+A blur pass is necessary to \redtext{filter} high frequency pattern introduced by noise texture.
 
 Implemented in a second shader, applied after SSAO shader.
 
@@ -762,7 +761,7 @@ Implemented in a second shader, applied after SSAO shader.
         \centering
         SSAO
         \begin{figure}
-            \vspace{-1.8ex}%
+            \vspace{-1ex}%
             \includegraphics[width=0.7\linewidth]{images/no_blur.png}
         \end{figure}
     \end{column}
@@ -771,7 +770,7 @@ Implemented in a second shader, applied after SSAO shader.
         \centering
         SSAO + Blur
         \begin{figure}
-            \vspace{-1.8ex}%
+            \vspace{-1ex}%
             \includegraphics[width=0.7\linewidth]{images/blur.png}
         \end{figure}
     \end{column}
@@ -784,13 +783,13 @@ Implemented in a second shader, applied after SSAO shader.
 
 \begin{frame}
 \frametitle{Application}
-A web application was created to show the results of the project.
+A \redtext{web application} was created to show the results of the project.
 
 Scene created with publicly available 3D models.
 \vspace{0.6cm}
 \begin{columns}
     \begin{column}[t]{0.45\linewidth}
-        Four views available:
+        \redtext{Four views} available:
         \begin{itemize}
             \item complete
             \item beauty
@@ -800,7 +799,7 @@ Scene created with publicly available 3D models.
     \end{column}
 
     \begin{column}[t]{0.45\linewidth}
-        Configurable parameters:
+        \redtext{Configurable parameters}:
         \begin{itemize}
             \item kernel radius
             \item minimum / maximum distances
@@ -855,11 +854,13 @@ Scene created with publicly available 3D models.
 \begin{frame}
 \frametitle{Tools and Software}
 % threejs webgl buildpack node/npm heroku eslint
-The project was realized in Javascript, using the 3D graphics library three.js (WebGL).
+The project was realized in \redtext{Javascript}, using the 3D graphics library \redtext{three.js} (\redtext{WebGL}).
 
-Node.js and its package manager npm were used to provide dependency management and deployment.
+\redtext{Node.js} and its package manager \redtext{npm} were used to provide dependency management and deployment.
 
-The Webpack bundler was used to assemble the project. Hosted on Heroku.
+The \redtext{Webpack} bundler was used to assemble the project.
+
+Application hosted on \redtext{Heroku}.
 \begin{figure}
     \centering
     \includegraphics[width=0.6\linewidth]{images/software_logos.pdf}
@@ -874,14 +875,14 @@ The Webpack bundler was used to assemble the project. Hosted on Heroku.
 \frametitle{Known Problems}
 The encountered problems are those typical of SSAO technique:
 \begin{itemize}
-    \item halo effect on object borders (bleeding): due to ``blind'' blur
-    \item high number of parameters, hard to find a global optimum
+    \item halo effect on object borders (\redtext{bleeding}): due to ``blind'' blur
+    \item high number of \redtext{parameters}, hard to find a global optimum
     \item SSAO effects greatly depends on scene scale and complexity
 \end{itemize}
 
-Possible solution for SSAO bleeding: depth aware blur.
+Possible solution for SSAO bleeding: \redtext{depth-aware blur}.
 
-More recently, some advanced algorithms have been developed: HBAO/HBAO\textplus, SSDO, RTAO, etc.
+More recently, some advanced algorithms have been developed, which overcome SSAO criticalities: HBAO/HBAO\textplus, SSDO, RTAO, etc.
 \end{frame}
 
 
@@ -890,17 +891,17 @@ More recently, some advanced algorithms have been developed: HBAO/HBAO\textplus,
 \frametitle{Conclusions}
 Features of this project:
 \begin{itemize}
-    \item fully functioning project realized with latest technologies
-    \item deployed on a public hosting service
+    \item \redtext{fully functioning} project realized with latest technologies
+    \item \redtext{deployed} on a public hosting service
     \item showcases the Screen Space Ambient Occlusion technique
-    \item includes fixes and improvements over the original method
-    \item adopts a depth reconstruction methodology
+    \item includes \redtext{fixes and improvements} over the original method
+    \item adopts a \redtext{depth reconstruction} methodology
 \end{itemize}
 
 Links to the project repository and online version:
 \begin{itemize}
-    \item \url{https://github.com/ivan94fi/cg3d_project_ssao}
-    \item \url{https://cg3d-project-ssao.herokuapp.com/}
+    \item \redtext{\underline{\url{https://github.com/ivan94fi/cg3d_project_ssao}}}
+    \item \redtext{\underline{\url{https://cg3d-project-ssao.herokuapp.com/}}}
 \end{itemize}
 
 \end{frame}
